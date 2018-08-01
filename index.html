@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Xls To Xml</title>
+</head>
+<body>
+    <fieldset>
+        <div>
+            <input type="file" id="file" name="avatar" accept=".xls,.xlsx,.xml,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            />
+        </div>
+    </fieldset>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
+    <script>
+        const file = document.getElementById('file');
+
+        file.addEventListener('change', (evt) => {
+
+            var file = evt.target.files[0]; // FileList object
+
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                var data = e.currentTarget.result;
+                var workbook = XLSX.read(data, {
+                    type: 'binary'
+                });
+
+                workbook.SheetNames.forEach(function (sheetName) {
+                    // Here is your object
+                    var excelObj = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);                   
+
+                    let agruped = excelObj.reduce(function (ant, act) {
+                        const p = ant[act.TipoDato] ? { [act.TipoDato]: [...ant[act.TipoDato], act] } : { [act.TipoDato]: [{ ...act }] };
+                        return { ...ant, ...p }
+                    }, {});
+                    const resultt = Object.keys(agruped).reduce((a, c) => {
+                        a += agruped[c].reduce((acumulator, prop) => {
+                            acumulator += `\t<member>${prop.nombreAPI}</member>\n`;
+                            return acumulator;
+                        }, '<type>\n');
+                        return a + `\t<member>${c}</member>\n</type>\n`
+                    }, '');
+                    console.log(resultt);
+                })
+            };
+            reader.onerror = function (ex) {
+                console.log(ex);
+            };
+            reader.readAsBinaryString(file);
+        });
+    </script>
+</body>
+</html>
